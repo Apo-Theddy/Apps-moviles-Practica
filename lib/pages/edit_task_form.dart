@@ -1,24 +1,38 @@
 import 'package:apps_moviles_practica/models/task.dart';
 import 'package:flutter/material.dart';
 
-class AddTaskForm extends StatefulWidget {
+class EditTaskForm extends StatefulWidget {
+  final Task task;
   final Function(Task task) onSubmit;
 
-  const AddTaskForm({
+  const EditTaskForm({
     super.key,
+    required this.task,
     required this.onSubmit,
   });
 
   @override
-  State<AddTaskForm> createState() => _AddTaskFormState();
+  State<EditTaskForm> createState() => _EditTaskFormState();
 }
 
-class _AddTaskFormState extends State<AddTaskForm> {
+class _EditTaskFormState extends State<EditTaskForm> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _proyectCodeController = TextEditingController();
-  final TextEditingController _activityCodeController = TextEditingController();
-  final TextEditingController _observationController = TextEditingController();
-  TaskStatus _selectedStatus = TaskStatus.NOT_STARTED;
+  late TextEditingController _proyectCodeController;
+  late TextEditingController _activityCodeController;
+  late TextEditingController _observationController;
+  late TaskStatus _selectedStatus;
+
+  @override
+  void initState() {
+    super.initState();
+    _proyectCodeController =
+        TextEditingController(text: widget.task.proyectCode.toString());
+    _activityCodeController =
+        TextEditingController(text: widget.task.activityCode.toString());
+    _observationController =
+        TextEditingController(text: widget.task.observation);
+    _selectedStatus = widget.task.status;
+  }
 
   @override
   void dispose() {
@@ -30,15 +44,15 @@ class _AddTaskFormState extends State<AddTaskForm> {
 
   void _handleSubmit() {
     if (_formKey.currentState?.validate() ?? false) {
-      final task = Task(
-        id: DateTime.now().millisecondsSinceEpoch,
+      final updatedTask = Task(
+        id: widget.task.id,
         proyectCode: int.parse(_proyectCodeController.text),
         activityCode: int.parse(_activityCodeController.text),
         status: _selectedStatus,
         observation: _observationController.text,
-        createdAt: DateTime.now().millisecondsSinceEpoch,
+        createdAt: widget.task.createdAt,
       );
-      widget.onSubmit(task);
+      widget.onSubmit(updatedTask);
     }
   }
 
@@ -98,16 +112,28 @@ class _AddTaskFormState extends State<AddTaskForm> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Header
+                // Header con información de la tarea
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Nueva Proyecto',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Editar Tarea',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'ID: ${widget.task.id}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
                     ),
                     IconButton(
                       onPressed: () => Navigator.pop(context),
@@ -118,7 +144,7 @@ class _AddTaskFormState extends State<AddTaskForm> {
                 ),
                 const SizedBox(height: 24),
 
-                // Project Code Field
+                // Código de Proyecto
                 TextFormField(
                   controller: _proyectCodeController,
                   decoration: _buildInputDecoration(
@@ -137,7 +163,7 @@ class _AddTaskFormState extends State<AddTaskForm> {
                 ),
                 const SizedBox(height: 20),
 
-                // Activity Code Field
+                // Código de Actividad
                 TextFormField(
                   controller: _activityCodeController,
                   decoration: _buildInputDecoration(
@@ -156,12 +182,13 @@ class _AddTaskFormState extends State<AddTaskForm> {
                 ),
                 const SizedBox(height: 20),
 
-                // Status Dropdown
+                // Estado
                 DropdownButtonFormField<TaskStatus>(
                   value: _selectedStatus,
                   decoration:
                       _buildInputDecoration('Estado', Icons.flag_outlined),
                   style: const TextStyle(fontSize: 16, color: Colors.black87),
+                  dropdownColor: Colors.white,
                   items: TaskStatus.values.map((status) {
                     return DropdownMenuItem(
                       value: status,
@@ -181,7 +208,7 @@ class _AddTaskFormState extends State<AddTaskForm> {
                 ),
                 const SizedBox(height: 20),
 
-                // Observation Field
+                // Observación
                 TextFormField(
                   controller: _observationController,
                   decoration: _buildInputDecoration(
@@ -197,8 +224,8 @@ class _AddTaskFormState extends State<AddTaskForm> {
                 ),
                 const SizedBox(height: 32),
 
-                // Submit Button
-                ElevatedButton(
+                // Botón de Guardar
+                ElevatedButton.icon(
                   onPressed: _handleSubmit,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -208,12 +235,27 @@ class _AddTaskFormState extends State<AddTaskForm> {
                     ),
                     elevation: 2,
                   ),
-                  child: const Text(
-                    'Guardar Proyecto',
+                  icon: const Icon(Icons.save_outlined, color: Colors.white),
+                  label: const Text(
+                    'Guardar Cambios',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
+                    ),
+                  ),
+                ),
+
+                // Fecha de creación
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: Center(
+                    child: Text(
+                      'Creado el: ${DateTime.fromMillisecondsSinceEpoch(widget.task.createdAt!).toString().split('.')[0]}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
                     ),
                   ),
                 ),
